@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" renderorder="right-down" width="50" height="6" tilewidth="70" tileheight="70" nextobjectid="42">
+ <tileset firstgid="1" name="tiles_spritesheet" tilewidth="70" tileheight="70" spacing="2" tilecount="143" columns="11">
+  <image source="../images/tiles_spritesheet.png" width="790" height="934"/>
+ </tileset>
+ <layer name="Background" width="50" height="6">
+  <data encoding="csv">
+139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,
+139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,
+139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,
+139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,
+139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,
+139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139
+</data>
+ </layer>
+ <layer name="Blocking" width="50" height="6">
+  <data encoding="csv">
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,89,0,0,0,0,0,0,0,89,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,89,0,0,0,0,89,0,0,0,0,0,89,0,89,0,0,89,0,0,0,0,89,0,0,0,0,0,0,89,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,89,0,0,0,89,0,0,0,0,89,0,0,0,89,0,89,0,0,0,0,0,0,89,0,0,89,0,0,0,89,0,0,89,0,0,0,89,0,0,0,89,0,0,
+0,0,89,0,0,0,0,89,0,0,0,0,0,0,0,0,0,0,0,0,89,0,0,0,0,0,0,0,0,0,0,0,89,0,0,0,89,0,0,89,0,0,0,89,0,0,0,89,0,0,
+96,96,96,96,96,0,96,96,96,0,96,96,96,96,0,96,96,96,0,96,96,96,96,96,96,96,0,0,96,96,96,96,96,96,96,96,96,0,96,96,96,96,96,96,96,0,96,96,96,96
+</data>
+ </layer>
+ <objectgroup name="Objects">
+  <object id="2" name="Coin" type="coin" gid="143" x="2874.09" y="141.061" width="70" height="70">
+   <properties>
+    <property name="sprite" value="coin"/>
+   </properties>
+  </object>
+  <object id="23" name="Coin" type="coin" gid="143" x="140.758" y="140.758" width="70" height="70">
+   <properties>
+    <property name="sprite" value="coin"/>
+   </properties>
+  </object>
+  <object id="24" name="Coin" type="coin" gid="143" x="413.485" y="152.879" width="70" height="70">
+   <properties>
+    <property name="sprite" value="coin"/>
+   </properties>
+  </object>
+  <object id="25" name="Coin" type="coin" gid="143" x="492.273" y="83.1818" width="70" height="70">
+   <properties>
+    <property name="sprite" value="coin"/>
+   </properties>
+  </object>
+  <object id="26" name="Coin" type="coin" gid="143" x="771.061" y="77.1212" width="70" height="70">
+   <properties>
+    <property name="sprite" value="coin"/>
+   </properties>
+  </object>
+  <object id="27" name="Coin" type="coin" gid="143" x="904.394" y="137.727" width="70" height="70">
+   <properties>
+    <property name="sprite" value="coin"/>
+   </properties>
+  </object>
+  <object id="28" name="Coin" type="coin" gid="143" x="983.182" y="216.515" width="70" height="70">
+   <properties>
+    <property name="sprite" value="coin"/>
+   </properties>
+  </object>
+  <object id="29" name="Coin" type="coin" gid="143" x="1392.27" y="71.0606" width="70" height="70">
+   <properties>
+    <property name="sprite" value="coin"/>
+   </properties>
+  </object>
+  <object id="30" name="Coin" type="coin" gid="143" x="1549.85" y="349.848" width="70" height="70">
+   <properties>
+    <property name="sprite" value="coin"/>
+   </properties>
+  </object>
+  <object id="31" name="Coin" type="coin" gid="143" x="1683.18" y="346.818" width="70" height="70">
+   <properties>
+    <property name="sprite" value="coin"/>
+   </properties>
+  </object>
+  <object id="32" name="Coin" type="coin" gid="143" x="1892.27" y="74.0909" width="70" height="70">
+   <properties>
+    <property name="sprite" value="coin"/>
+   </properties>
+  </object>
+  <object id="33" name="Coin" type="coin" gid="143" x="2031.67" y="77.1212" width="70" height="70">
+   <properties>
+    <property name="sprite" value="coin"/>
+   </properties>
+  </object>
+  <object id="34" name="Coin" type="coin" gid="143" x="2046.82" y="352.879" width="70" height="70">
+   <properties>
+    <property name="sprite" value="coin"/>
+   </properties>
+  </object>
+  <object id="35" name="Coin" type="coin" gid="143" x="2240.76" y="77.1212" width="70" height="70">
+   <properties>
+    <property name="sprite" value="coin"/>
+   </properties>
+  </object>
+  <object id="36" name="Coin" type="coin" gid="143" x="2386.21" y="216.515" width="70" height="70">
+   <properties>
+    <property name="sprite" value="coin"/>
+   </properties>
+  </object>
+  <object id="37" name="Coin" type="coin" gid="143" x="2513.48" y="68.0303" width="70" height="70">
+   <properties>
+    <property name="sprite" value="coin"/>
+   </properties>
+  </object>
+  <object id="38" name="Coin" type="coin" gid="143" x="2728.64" y="68.0303" width="70" height="70">
+   <properties>
+    <property name="sprite" value="coin"/>
+   </properties>
+  </object>
+  <object id="39" name="Coin" type="coin" gid="143" x="3013.48" y="74.0909" width="70" height="70">
+   <properties>
+    <property name="sprite" value="coin"/>
+   </properties>
+  </object>
+  <object id="40" name="Coin" type="coin" gid="143" x="3152.88" y="71.0606" width="70" height="70">
+   <properties>
+    <property name="sprite" value="coin"/>
+   </properties>
+  </object>
+  <object id="41" name="Coin" type="coin" gid="143" x="3298.33" y="77.1212" width="70" height="70">
+   <properties>
+    <property name="sprite" value="coin"/>
+   </properties>
+  </object>
+ </objectgroup>
+</map>

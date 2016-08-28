@@ -4,7 +4,7 @@ SideScroller.Boot = function(){};
 SideScroller.Boot.prototype = {
   preload: function() {
     //assets we'll use in the loading screen
-    this.load.image('preloadbar', 'assets/images/preloader-bar.png');
+    this.load.image('preloadbar', 'assets/images/loading_bar/loading_bar_1_sm.png');
   },
   create: function() {
     //loading screen will have a white background

@@ -7,17 +7,21 @@ SideScroller.Game.prototype = {
   create: function() {
     this.map = this.game.add.tilemap('level1');
     //the first parameter is the tileset name as specified in Tiled, the second is the key to the asset
-    this.map.addTilesetImage('tiles_spritesheet', 'gameTiles');
+    this.map.addTilesetImage('dungeon', 'gameTiles');
     //create layers
-    this.backgroundlayer = this.map.createLayer('Background');
+    this.backgroundLayer1 = this.map.createLayer('Background 1');
+    this.backgroundLayer2 = this.map.createLayer('Background 2');
     this.blockedLayer = this.map.createLayer('Blocking');
     //collision on blockedLayer
     this.map.setCollisionBetween(1, 100000, true, 'Blocking');
     //resizes the game world to match the layer dimensions
-    this.backgroundlayer.resizeWorld();
-    this.createCoins();
+    this.backgroundLayer1.resizeWorld();
+    // this.createCoins();
     //create player
     this.player = this.game.add.sprite(0, 270, 'player');
+    // add animation to player
+    this.player_anim = this.player.animations.add('walk');
+    this.player_anim.play(10, true);
     //enable physics on the player
     this.game.physics.arcade.enable(this.player);
     //player gravity
@@ -32,7 +36,7 @@ SideScroller.Game.prototype = {
     //move player with cursor keys
     this.cursors = this.game.input.keyboard.createCursorKeys();
     // sound
-    this.coinSound = this.game.add.audio('coin');
+    // this.coinSound = this.game.add.audio('coin');
     //init game controller for mobile
     // this.initGameController();
   },

@@ -9,9 +9,10 @@ SideScroller.Preload.prototype = {
     this.preloadBar.scale.setTo(3);
     this.load.setPreloadSprite(this.preloadBar);
     //load game assets
-    this.load.tilemap('level1', 'assets/tilemaps/level_1.json', null, Phaser.Tilemap.TILED_JSON);
-    this.load.image('gameTiles', 'assets/images/tiles_spritesheet.png');
-    this.load.image('player', 'assets/images/player.png');
+    this.load.tilemap('level1', 'assets/tilemaps/dungeon_tileset.json', null, Phaser.Tilemap.TILED_JSON);
+    this.load.image('gameTiles', 'assets/images/map_sheet.png');
+    this.load.image('player_sprite', 'assets/images/character_sheet.png');
+    this.load.spritesheet('player', 'assets/images/character_sheet.png', 70, 140)
     this.load.image('playerDuck', 'assets/images/player_duck.png');
     this.load.image('playerDead', 'assets/images/player_dead.png');
     this.load.image('coin', 'assets/images/goldCoin.png');

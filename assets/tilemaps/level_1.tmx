@@ -3,6 +3,12 @@
  <tileset firstgid="1" name="tiles_spritesheet" tilewidth="70" tileheight="70" spacing="2" tilecount="143" columns="11">
   <image source="../images/tiles_spritesheet.png" width="790" height="934"/>
  </tileset>
+ <tileset firstgid="144" name="map_sheet" tilewidth="70" tileheight="70" tilecount="30" columns="5">
+  <image source="../images/map_sheet.png" width="350" height="420"/>
+ </tileset>
+ <tileset firstgid="174" name="dungeon" tilewidth="70" tileheight="70" tilecount="40" columns="20">
+  <image source="../images/character_sheet.png" width="1400" height="140"/>
+ </tileset>
  <layer name="Background" width="50" height="6">
   <data encoding="csv">
 139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,139,

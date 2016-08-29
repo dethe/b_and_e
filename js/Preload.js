@@ -21,6 +21,7 @@ SideScroller.Preload.prototype = {
     this.load.image('ochre_cube', 'assets/images/ochre_cube/ochre_cube_1_sm.png', 140, 121)
     this.load.image('owlpig', 'assets/images/owlpig/owlpig_1_sm.png', 51, 140)
     this.load.image('umber_couch', 'assets/images/umber_couch/umber_couch_1_sm.png', 140, 70)
+    this.load.spritesheet('torch_sheet', 'assets/images/torch/torch_sheet.png', 70, 70)
   },
   create: function() {
     this.state.start('Game');

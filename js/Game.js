@@ -49,9 +49,9 @@ SideScroller.Game.prototype = {
     this.monster_name_text = this.game.add.text(this.game.camera.width - 168, 30, '', '20pt Helvetica');
     mhb.fixedToCamera = true;
     this.monster_name_text.fixedToCamera = true;
-    this.damageText = this.game.add.text(this.game.camera.width, 90, '', '20pt Helvetica');
-    this.damageText.setTextBounds(0, 90, 30, 800);
-    this.damageText.boundsAlignV = 'center';
+    this.damageText = this.game.add.text(0, 0, '', '16pt Helvetica');
+    this.damageText.setTextBounds(173, 90, 400, 30);
+    this.damageText.boundsAlignH = 'center';
     this.damageText.fixedToCamera = true;
   },
   update: function() {

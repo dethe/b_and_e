@@ -13,67 +13,50 @@ SideScroller.Game.prototype = {
     this.backgroundLayer2 = this.map.createLayer('Background 2');
     this.blockedLayer = this.map.createLayer('Blocking');
     //collision on blockedLayer
-    this.map.setCollisionBetween(1, 100000, true, 'Blocking');
+    // this.map.setCollisionBetween(1, 100000, true, 'Blocking');
     //resizes the game world to match the layer dimensions
     this.backgroundLayer1.resizeWorld();
     //create player
     this.player = this.game.add.sprite(35, 350, 'player');
     this.player.health = this.player.maxHealth;
+    this.player.data.velocity = {x: 300, y: 0};
     // add animation to player
     this.player_anim = this.player.animations.add('walk');
     this.player_anim.play(10, true);
     //enable physics on the player
-    this.game.physics.arcade.enable(this.player);
+    // this.game.physics.arcade.enable(this.player);
     this.player.anchor.setTo(0.5, 1);
     this.player.flipped = false;
-    //player gravity
-    this.player.body.gravity.y = 1000;
-    // set up torch sprite and animation
-    //properties when the player is ducked and standing, so we can use in update()
     //the camera will follow the player in the world
     this.game.camera.follow(this.player);
     //move player with cursor keys
     this.cursors = this.game.input.keyboard.createCursorKeys();
+    // set up torch sprite and animation
     // load torches
     this.createTorches();
     this.initWanderingMonsters();
     this.wandering_monster = null;
-    // health bars
-    this.player_health_bar = this.add.bitmapData(128, 8);
-    var phb = this.game.add.sprite(40, 60, this.player_health_bar);
-    var pht = this.game.add.text(40, 30, 'Nessarose', '20pt Helvetica');
-    phb.fixedToCamera = true;
-    pht.fixedToCamera = true;
-    this.monster_health_bar = this.add.bitmapData(128, 8);
-    var mhb = this.game.add.sprite(this.game.camera.width - 168, 60, this.monster_health_bar);
-    this.monster_name_text = this.game.add.text(this.game.camera.width - 168, 30, '', '20pt Helvetica');
-    mhb.fixedToCamera = true;
-    this.monster_name_text.fixedToCamera = true;
-    this.damageText = this.game.add.text(0, 0, '', '16pt Helvetica');
-    this.damageText.setTextBounds(173, 90, 400, 30);
-    this.damageText.boundsAlignH = 'center';
-    this.damageText.fixedToCamera = true;
+    // setup health and text
+    this.initText();
   },
   update: function() {
     // collision
     this.game.physics.arcade.collide(this.player, this.blockedLayer);
     if (this.player.alive){
-        if (this.cursors.right.isDown && this.player.body.blocked.down){
+        if (this.cursors.right.isDown){
             if (this.player.flipped){
                 this.player.flipped = false;
                 this.player.scale.x = 1;
             }
-            this.player.body.velocity.x = 300;
-        }else if (this.cursors.left.isDown && this.player.body.blocked.down){
+            this.player.data.velocity.x = 300;
+        }else if (this.cursors.left.isDown){
             if (!this.player.flipped){
                 this.player.flipped = true;
                 this.player.scale.x = -1;
             }
-            this.player.body.velocity.x = -300;
+            this.player.data.velocity.x = -300;
         }else{
-            if (this.player.body.blocked.down){
-                this.player.body.velocity.x = 0;
-            }
+            this.player.data.velocity.x = 0;
             if(this.cursors.up.isDown) {
                 this.playerLook();
             }
@@ -90,14 +73,11 @@ SideScroller.Game.prototype = {
     if(this.player.x >= this.game.world.width) {
         this.game.state.start('Game');
     }
-    if(this.player.y >= (this.game.world.height + this.player.height)){
-        this.game.state.start('Game');
-    }
     // show health bars
     this.showHealth();
   },
   monsterMove: function(){
-      this.game.physics.arcade.collide(this.wandering_monster, this.blockedLayer);
+    //   this.game.physics.arcade.collide(this.wandering_monster, this.blockedLayer);
       var fuzz = 20; // we don't need this to be too specific
       var distance = Math.abs(this.player.x - this.wandering_monster.x) - (this.player.width + this.wandering_monster.width) / 2;
       if (distance < this.wandering_monster.data.range - fuzz){
@@ -105,23 +85,23 @@ SideScroller.Game.prototype = {
       }else if(distance > this.wandering_monster.data.range + fuzz){
           this._monsterMoveCloser();
       }else{
-          this.wandering_monster.body.velocity.x = 0;
+          this.wandering_monster.data.velocity.x = 0;
       }
   },
   _monsterMoveAway: function(){
       var playerToTheLeft = this.player.x < this.wandering_monster.x;
       if (playerToTheLeft){
-          this.wandering_monster.body.velocity.x = this.wandering_monster.speed || 350;
+          this.wandering_monster.data.velocity.x = this.wandering_monster.speed || 350;
       }else{
-          this.wandering_monster.body.velocity.x = -(this.wandering_monster.speed || 350);
+          this.wandering_monster.data.velocity.x = -(this.wandering_monster.speed || 350);
       }
   },
   _monsterMoveCloser: function(){
       var playerToTheLeft = this.player.x < this.wandering_monster.x;
       if (playerToTheLeft){
-          this.wandering_monster.body.velocity.x = -(this.wandering_monster.speed || 350);
+          this.wandering_monster.data.velocity.x = -(this.wandering_monster.speed || 350);
       }else{
-          this.wandering_monster.body.velocity.x = this.wandering_monster.speed || 350;
+          this.wandering_monster.data.velocity.x = this.wandering_monster.speed || 350;
       }
   },
   monsterAttack: function(){
@@ -151,6 +131,10 @@ SideScroller.Game.prototype = {
       }
   },
   render: function(){
+        this.player.x += this.player.data.velocity.x * this.game.time.physicsElapsed;
+        if (this.wandering_monster){
+            this.wandering_monster.x += this.wandering_monster.data.velocity.x * this.game.time.physicsElapsed;
+        }
         this.game.debug.text(this.game.time.fps || '--', 10, 20, "#00ff00", "14px Courier");
     },
   playerHit: function(player, blockedLayer) {
@@ -158,8 +142,6 @@ SideScroller.Game.prototype = {
   },
   playerLook: function() {
       // Open doors, examine wall
-      if(this.player.body.blocked.down) {
-      }
   },
   playerSweepBounds: function(){
       var b = this.player.getBounds();
@@ -236,8 +218,7 @@ SideScroller.Game.prototype = {
 
     _wanderingMonster: function(sprite_name, name, health, damage, hitson, cooldown, range, attackText){
         var sprite = this.game.add.sprite(0, 350, sprite_name);
-        this.game.physics.arcade.enable(sprite);
-        sprite.body.gravity.y = 1000;
+        // this.game.physics.arcade.enable(sprite);
         sprite.anchor.setTo(0.5, 1);
         sprite.name = name;
         sprite.health = sprite.maxHealth = health;
@@ -247,8 +228,26 @@ SideScroller.Game.prototype = {
         sprite.data.isCoolingDown = 0;
         sprite.data.range = range;
         sprite.data.attackText = attackText;
+        sprite.data.velocity = {x: -300, y: 0}
         sprite.kill();
         return sprite;
+    },
+
+    initText: function(){
+        this.player_health_bar = this.add.bitmapData(128, 8);
+        var phb = this.game.add.sprite(40, 60, this.player_health_bar);
+        var pht = this.game.add.text(40, 30, 'Nessarose', '20pt Helvetica');
+        phb.fixedToCamera = true;
+        pht.fixedToCamera = true;
+        this.monster_health_bar = this.add.bitmapData(128, 8);
+        var mhb = this.game.add.sprite(this.game.camera.width - 168, 60, this.monster_health_bar);
+        this.monster_name_text = this.game.add.text(this.game.camera.width - 168, 30, '', '20pt Helvetica');
+        mhb.fixedToCamera = true;
+        this.monster_name_text.fixedToCamera = true;
+        this.damageText = this.game.add.text(0, 0, '', '16pt Helvetica');
+        this.damageText.setTextBounds(173, 90, 400, 30);
+        this.damageText.boundsAlignH = 'center';
+        this.damageText.fixedToCamera = true;
     },
 
     initWanderingMonsters: function(){

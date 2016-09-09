@@ -1,3 +1,41 @@
+
+var Character = function(game, x, y, key){
+    Phaser.Sprite.call(this, game, x, y, key);
+};
+Character.prototype = Object.create(Phaser.Sprite.prototype);
+Character.prototype.constructor = Character;
+Character.prototype.update = function(){
+    // automatically called by World.update
+    this.x += this.data.velocity.x * this.game.time.physicsElapsed;
+};
+
+var Player = function(game, x, y, key){
+    Character.call(this, game, x, y, key);
+    this.health = this.maxHealth;
+    this.data.velocity = {x: 300, y: 0};
+    this._anim = this.animations.add('walk');
+    this._anim.play(10, true);
+    this.anchor.setTo(0.5, 1);
+    this.flipped = false;
+    //the camera will follow the player in the world
+    this.game.camera.follow(this);
+};
+Player.prototype = Object.create(Character.prototype);
+Player.prototype.constructor = Player;
+Player.prototype.update = function(){
+    Character.prototype.update.call(this);
+};
+
+var Monster = function(game, x, y, key){
+    Character.call(this, game, x, y, key);
+};
+Monster.prototype = Object.create(Character.prototype);
+Monster.prototype.constructor = Monster;
+Monster.prototype.update = function(){
+    Character.prototype.update.call(this);
+};
+
+
 var SideScroller = SideScroller || {};
 SideScroller.Game = function(){};
 SideScroller.Game.prototype = {
@@ -17,31 +55,20 @@ SideScroller.Game.prototype = {
     //resizes the game world to match the layer dimensions
     this.backgroundLayer1.resizeWorld();
     //create player
-    this.player = this.game.add.sprite(35, 350, 'player');
-    this.player.health = this.player.maxHealth;
-    this.player.data.velocity = {x: 300, y: 0};
-    // add animation to player
-    this.player_anim = this.player.animations.add('walk');
-    this.player_anim.play(10, true);
-    //enable physics on the player
-    // this.game.physics.arcade.enable(this.player);
-    this.player.anchor.setTo(0.5, 1);
-    this.player.flipped = false;
-    //the camera will follow the player in the world
-    this.game.camera.follow(this.player);
+    this.player = this.game.add.existing(new Player(this.game, 35, 350, 'player'));
     //move player with cursor keys
     this.cursors = this.game.input.keyboard.createCursorKeys();
     // set up torch sprite and animation
     // load torches
     this.createTorches();
     this.initWanderingMonsters();
-    this.wandering_monster = null;
+    this.monster = null;
     // setup health and text
     this.initText();
   },
   update: function() {
     // collision
-    this.game.physics.arcade.collide(this.player, this.blockedLayer);
+    // this.game.physics.arcade.collide(this.player, this.blockedLayer);
     if (this.player.alive){
         if (this.cursors.right.isDown){
             if (this.player.flipped){
@@ -61,80 +88,76 @@ SideScroller.Game.prototype = {
                 this.playerLook();
             }
         }
-        if (!this.wandering_monster && this.underTorch()){
+        if (!this.monster && this.underTorch()){
             this.addWanderingMonster();
         }
-        if (this.wandering_monster){
+        if (this.monster){
             this.monsterMove();
             this.monsterAttack();
         }
     }
     //restart the game if reaching the edge
-    if(this.player.x >= this.game.world.width) {
+    if(this.player.x >= this.game.world.width || this.player.x < 0) {
         this.game.state.start('Game');
     }
     // show health bars
     this.showHealth();
   },
   monsterMove: function(){
-    //   this.game.physics.arcade.collide(this.wandering_monster, this.blockedLayer);
+    //   this.game.physics.arcade.collide(this.monster, this.blockedLayer);
       var fuzz = 20; // we don't need this to be too specific
-      var distance = Math.abs(this.player.x - this.wandering_monster.x) - (this.player.width + this.wandering_monster.width) / 2;
-      if (distance < this.wandering_monster.data.range - fuzz){
+      var distance = Math.abs(this.player.x - this.monster.x) - (this.player.width + this.monster.width) / 2;
+      if (distance < this.monster.data.range - fuzz){
           this._monsterMoveAway();
-      }else if(distance > this.wandering_monster.data.range + fuzz){
+      }else if(distance > this.monster.data.range + fuzz){
           this._monsterMoveCloser();
       }else{
-          this.wandering_monster.data.velocity.x = 0;
+          this.monster.data.velocity.x = 0;
       }
   },
   _monsterMoveAway: function(){
-      var playerToTheLeft = this.player.x < this.wandering_monster.x;
+      var playerToTheLeft = this.player.x < this.monster.x;
       if (playerToTheLeft){
-          this.wandering_monster.data.velocity.x = this.wandering_monster.speed || 350;
+          this.monster.data.velocity.x = this.monster.speed || 350;
       }else{
-          this.wandering_monster.data.velocity.x = -(this.wandering_monster.speed || 350);
+          this.monster.data.velocity.x = -(this.monster.speed || 350);
       }
   },
   _monsterMoveCloser: function(){
-      var playerToTheLeft = this.player.x < this.wandering_monster.x;
+      var playerToTheLeft = this.player.x < this.monster.x;
       if (playerToTheLeft){
-          this.wandering_monster.data.velocity.x = -(this.wandering_monster.speed || 350);
+          this.monster.data.velocity.x = -(this.monster.speed || 350);
       }else{
-          this.wandering_monster.data.velocity.x = this.wandering_monster.speed || 350;
+          this.monster.data.velocity.x = this.monster.speed || 350;
       }
   },
   monsterAttack: function(){
-      var playerToTheLeft = this.player.x < this.wandering_monster.x;
+      var playerToTheLeft = this.player.x < this.monster.x;
       if (playerToTheLeft){
-          this.wandering_monster.scale.x = 1;
+          this.monster.scale.x = 1;
       }else{
-          this.wandering_monster.scale.x = -1;
+          this.monster.scale.x = -1;
       }
-      if (this.wandering_monster.data.isCoolingDown){
-          this.wandering_monster.data.isCoolingDown -= 1;
+      if (this.monster.data.isCoolingDown){
+          this.monster.data.isCoolingDown -= 1;
           return;
       }
       var fuzz = 20; // we don't need this to be too specific
-      var distance = Math.abs(this.player.x - this.wandering_monster.x) - (this.player.width + this.wandering_monster.width) / 2;
-      if ((distance + fuzz) > this.wandering_monster.data.range && (distance - fuzz) < this.wandering_monster.data.range){
+      var distance = Math.abs(this.player.x - this.monster.x) - (this.player.width + this.monster.width) / 2;
+      if ((distance + fuzz) > this.monster.data.range && (distance - fuzz) < this.monster.data.range){
           var attack_roll = this.rnd.between(0, 99);
-          if (attack_roll < this.wandering_monster.data.hitson){
-              this.player.damage(this.wandering_monster.data.doesDamage);
-              this.wandering_monster.data.isCoolingDown = this.wandering_monster.data.cooldown;
-              this.damageText.text = 'The ' + this.wandering_monster.name +
-                ' ' + this.wandering_monster.data.attackText + '.';
+          if (attack_roll < this.monster.data.hitson){
+              this.player.damage(this.monster.data.doesDamage);
+              this.monster.data.isCoolingDown = this.monster.data.cooldown;
+              this.damageText.text = 'The ' + this.monster.name +
+                ' ' + this.monster.data.attackText + '.';
           }else{
-              this.damageText.text = 'The ' + this.wandering_monster.name +
+              this.damageText.text = 'The ' + this.monster.name +
                 ' swung at you, but missed.'
           }
       }
   },
   render: function(){
-        this.player.x += this.player.data.velocity.x * this.game.time.physicsElapsed;
-        if (this.wandering_monster){
-            this.wandering_monster.x += this.wandering_monster.data.velocity.x * this.game.time.physicsElapsed;
-        }
         this.game.debug.text(this.game.time.fps || '--', 10, 20, "#00ff00", "14px Courier");
     },
   playerHit: function(player, blockedLayer) {
@@ -206,9 +229,9 @@ SideScroller.Game.prototype = {
 
     showHealth: function(){
         this.showCharHealth(this.player, this.player_health_bar);
-        if (this.wandering_monster){
-            this.monster_name_text.setText(this.wandering_monster.name);
-            this.showCharHealth(this.wandering_monster, this.monster_health_bar);
+        if (this.monster){
+            this.monster_name_text.setText(this.monster.name);
+            this.showCharHealth(this.monster, this.monster_health_bar);
         }else{
             this.monster_health_bar.context.clearRect(0,0,128,8);
             this.monster_health_bar.dirty = true;
@@ -217,7 +240,7 @@ SideScroller.Game.prototype = {
     },
 
     _wanderingMonster: function(sprite_name, name, health, damage, hitson, cooldown, range, attackText){
-        var sprite = this.game.add.sprite(0, 350, sprite_name);
+        var sprite = this.game.add.existing(new Monster(this.game, 0, 350, sprite_name));
         // this.game.physics.arcade.enable(sprite);
         sprite.anchor.setTo(0.5, 1);
         sprite.name = name;
@@ -304,7 +327,7 @@ SideScroller.Game.prototype = {
         monster.revive();
         monster.health = monster.maxHealth;
         monster.x = this.player.x + 200;
-        this.wandering_monster = monster;
+        this.monster = monster;
         return monster;
     },
   };

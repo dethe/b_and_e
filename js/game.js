@@ -16,7 +16,6 @@ var Player = function(game, x, y, key){
     this._anim = this.animations.add('walk');
     this._anim.play(10, true);
     this.anchor.setTo(0.5, 1);
-    this.flipped = false;
     //the camera will follow the player in the world
     this.game.camera.follow(this);
 };
@@ -24,6 +23,9 @@ Player.prototype = Object.create(Character.prototype);
 Player.prototype.constructor = Player;
 Player.prototype.update = function(){
     Character.prototype.update.call(this);
+};
+Player.prototype.look = function(){
+    // Open doors, examine wall
 };
 
 var Monster = function(game, x, y, key){
@@ -57,7 +59,7 @@ SideScroller.Game.prototype = {
     //create player
     this.player = this.game.add.existing(new Player(this.game, 35, 350, 'player'));
     //move player with cursor keys
-    this.cursors = this.game.input.keyboard.createCursorKeys();
+    this.setupKeys();
     // set up torch sprite and animation
     // load torches
     this.createTorches();
@@ -66,28 +68,47 @@ SideScroller.Game.prototype = {
     // setup health and text
     this.initText();
   },
+  setupKeys: function(){
+      var player = this.player;
+      this.game.input.keyboard.enabled = true;
+      this.keys = this.game.input.keyboard.addKeys({
+          a: Phaser.KeyCode.A,
+          b: Phaser.KeyCode.B, // insta-bbq
+          c: Phaser.KeyCode.C, // curse
+          k: Phaser.KeyCode.K, // kick
+          n: Phaser.KeyCode.N, // nap
+          s: Phaser.KeyCode.S, // sweep
+          t: Phaser.KeyCode.T, // ticket (for bus)
+          up: Phaser.KeyCode.UP, // up arrow
+          down: Phaser.KeyCode.DOWN, // down arrow
+          right: Phaser.KeyCode.RIGHT, // right arrow
+          left: Phaser.KeyCode.LEFT, // left arrow
+          space: Phaser.KeyCode.SPACEBAR, // repeat last action, or kick
+      });
+      this.keys.right.action = function(){
+          player.scale.x = 1;
+          player.data.velocity.x = 300;
+      };
+      this.keys.left.action = function(){
+          player.scale.x = -1;
+          player.data.velocity.x = -300;
+      };
+      this.keys.up.action = function(){
+          player.look();
+      };
+  },
+  handleKeys: function(){
+      var lastKey = this.game.input.keyboard.lastKey;
+      if (lastKey && lastKey.isDown && lastKey.action){
+          lastKey.action();
+      }
+  },
   update: function() {
     // collision
     // this.game.physics.arcade.collide(this.player, this.blockedLayer);
     if (this.player.alive){
-        if (this.cursors.right.isDown){
-            if (this.player.flipped){
-                this.player.flipped = false;
-                this.player.scale.x = 1;
-            }
-            this.player.data.velocity.x = 300;
-        }else if (this.cursors.left.isDown){
-            if (!this.player.flipped){
-                this.player.flipped = true;
-                this.player.scale.x = -1;
-            }
-            this.player.data.velocity.x = -300;
-        }else{
-            this.player.data.velocity.x = 0;
-            if(this.cursors.up.isDown) {
-                this.playerLook();
-            }
-        }
+        this.player.data.velocity.x = 0;
+        this.handleKeys();
         if (!this.monster && this.underTorch()){
             this.addWanderingMonster();
         }
@@ -162,9 +183,6 @@ SideScroller.Game.prototype = {
     },
   playerHit: function(player, blockedLayer) {
 
-  },
-  playerLook: function() {
-      // Open doors, examine wall
   },
   playerSweepBounds: function(){
       var b = this.player.getBounds();

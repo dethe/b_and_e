@@ -24,6 +24,6 @@ SideScroller.Preload.prototype = {
     this.load.spritesheet('torch_sheet', 'assets/images/torch/torch_sheet.png', 70, 70)
   },
   create: function() {
-    this.state.start('Game');
+    this.state.start('Level');
   }
 };

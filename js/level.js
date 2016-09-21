@@ -1,6 +1,7 @@
 
 var Character = function(game, x, y, key){
     Phaser.Sprite.call(this, game, x, y, key);
+    this.state = this.game.state.states.Level;
 };
 Character.prototype = Object.create(Phaser.Sprite.prototype);
 Character.prototype.constructor = Character;
@@ -27,6 +28,10 @@ Player.prototype.update = function(){
 Player.prototype.look = function(){
     // Open doors, examine wall
 };
+Player.prototype.move = function(){
+};
+Player.prototype.attack = function(){
+};
 
 var Monster = function(game, x, y, key){
     Character.call(this, game, x, y, key);
@@ -36,11 +41,66 @@ Monster.prototype.constructor = Monster;
 Monster.prototype.update = function(){
     Character.prototype.update.call(this);
 };
+Monster.prototype.move = function(){
+    //   this.game.physics.arcade.collide(this.monster, this.blockedLayer);
+    var fuzz = 20; // we don't need this to be too specific
+    var distance = Math.abs(this.state.player.x - this.x) - (this.state.player.width + this.width) / 2;
+    if (distance < this.data.range - fuzz){
+        this.moveAway();
+    }else if(distance > this.data.range + fuzz){
+        this.moveCloser();
+    }else{
+        this.data.velocity.x = 0;
+    }
+};
+Monster.prototype.moveAway = function(){
+    var playerToTheLeft = this.state.player.x < this.x;
+    if (playerToTheLeft){
+        this.data.velocity.x = this.speed || 350;
+    }else{
+        this.data.velocity.x = -(this.speed || 350);
+    }
+};
+Monster.prototype.moveCloser = function(){
+    var playerToTheLeft = this.state.player.x < this.x;
+    if (playerToTheLeft){
+        this.data.velocity.x = -(this.speed || 350);
+    }else{
+        this.data.velocity.x = this.speed || 350;
+    }
+};
+Monster.prototype.attack = function(){
+    var playerToTheLeft = this.state.player.x < this.x;
+    if (playerToTheLeft){
+        this.scale.x = 1;
+    }else{
+        this.scale.x = -1;
+    }
+    if (this.data.isCoolingDown){
+        // cooldown should be based on time elapsed, like movement
+        this.data.isCoolingDown -= 1;
+        return;
+    }
+    var fuzz = 20; // we don't need this to be too specific
+    var distance = Math.abs(this.state.player.x - this.x) - (this.width + this.width) / 2;
+    if ((distance + fuzz) > this.data.range && (distance - fuzz) < this.data.range){
+        var attack_roll = this.state.rnd.between(0, 99);
+        if (attack_roll < this.data.hitson){
+            this.state.player.damage(this.data.doesDamage);
+            this.data.isCoolingDown = this.data.cooldown;
+            this.state.damageText.text = 'The ' + this.name +
+              ' ' + this.data.attackText + '.';
+        }else{
+            this.state.damageText.text = 'The ' + this.name +
+              ' swung at you, but missed.'
+        }
+    }
+};
 
 
 var SideScroller = SideScroller || {};
-SideScroller.Game = function(){};
-SideScroller.Game.prototype = {
+SideScroller.Level = function(){};
+SideScroller.Level.prototype = {
   preload: function() {
       this.game.time.advancedTiming = true;
     },
@@ -113,70 +173,16 @@ SideScroller.Game.prototype = {
             this.addWanderingMonster();
         }
         if (this.monster){
-            this.monsterMove();
-            this.monsterAttack();
+            this.monster.move();
+            this.monster.attack();
         }
     }
     //restart the game if reaching the edge
     if(this.player.x >= this.game.world.width || this.player.x < 0) {
-        this.game.state.start('Game');
+        this.game.state.start('Level');
     }
     // show health bars
     this.showHealth();
-  },
-  monsterMove: function(){
-    //   this.game.physics.arcade.collide(this.monster, this.blockedLayer);
-      var fuzz = 20; // we don't need this to be too specific
-      var distance = Math.abs(this.player.x - this.monster.x) - (this.player.width + this.monster.width) / 2;
-      if (distance < this.monster.data.range - fuzz){
-          this._monsterMoveAway();
-      }else if(distance > this.monster.data.range + fuzz){
-          this._monsterMoveCloser();
-      }else{
-          this.monster.data.velocity.x = 0;
-      }
-  },
-  _monsterMoveAway: function(){
-      var playerToTheLeft = this.player.x < this.monster.x;
-      if (playerToTheLeft){
-          this.monster.data.velocity.x = this.monster.speed || 350;
-      }else{
-          this.monster.data.velocity.x = -(this.monster.speed || 350);
-      }
-  },
-  _monsterMoveCloser: function(){
-      var playerToTheLeft = this.player.x < this.monster.x;
-      if (playerToTheLeft){
-          this.monster.data.velocity.x = -(this.monster.speed || 350);
-      }else{
-          this.monster.data.velocity.x = this.monster.speed || 350;
-      }
-  },
-  monsterAttack: function(){
-      var playerToTheLeft = this.player.x < this.monster.x;
-      if (playerToTheLeft){
-          this.monster.scale.x = 1;
-      }else{
-          this.monster.scale.x = -1;
-      }
-      if (this.monster.data.isCoolingDown){
-          this.monster.data.isCoolingDown -= 1;
-          return;
-      }
-      var fuzz = 20; // we don't need this to be too specific
-      var distance = Math.abs(this.player.x - this.monster.x) - (this.player.width + this.monster.width) / 2;
-      if ((distance + fuzz) > this.monster.data.range && (distance - fuzz) < this.monster.data.range){
-          var attack_roll = this.rnd.between(0, 99);
-          if (attack_roll < this.monster.data.hitson){
-              this.player.damage(this.monster.data.doesDamage);
-              this.monster.data.isCoolingDown = this.monster.data.cooldown;
-              this.damageText.text = 'The ' + this.monster.name +
-                ' ' + this.monster.data.attackText + '.';
-          }else{
-              this.damageText.text = 'The ' + this.monster.name +
-                ' swung at you, but missed.'
-          }
-      }
   },
   render: function(){
         this.game.debug.text(this.game.time.fps || '--', 10, 20, "#00ff00", "14px Courier");

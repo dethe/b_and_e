@@ -18,7 +18,7 @@ SideScroller.Boot.prototype = {
     //screen size will be set automatically
     // this.scale.setScreenSize(true); // This function no longer exists in Phaser
     //physics system
-    this.game.physics.startSystem(Phaser.Physics.ARCADE);
+    // this.game.physics.startSystem(Phaser.Physics.ARCADE);
     this.state.start('Preload');
   }
 };

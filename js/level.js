@@ -76,7 +76,6 @@ Player.prototype.look = function(){
 Player.prototype.move = function(){
 };
 Player.prototype.attack = function(){
-    if (!this.state.monster){ return; }
     if (this.data.isCoolingDown){
         // cooldown should be based on time elapsed, like movement
         this.data.isCoolingDown -= 1;
@@ -84,9 +83,10 @@ Player.prototype.attack = function(){
             this.state.playerActionText.text = '';
             this.state.isNapping = false;
         }
-        console.log('uhh, cooling down %s', this.data.isCoolingDown);
         return;
     }
+    if (!this.state.monster){ return; }
+    if (!this.state.keys.space.isDown){ return; }
     var monsterToTheLeft = this.state.monster.x < this.x;
     if (monsterToTheLeft && this.scale.x === -1){
         // OK we're facing the monster
@@ -113,7 +113,7 @@ Player.prototype.attack = function(){
         this.state.monster.damage(weapon.damage);
         this.health -= weapon.selfdamage;
         // is the following line needed or is it part of framework?
-        if (this.health < this.maxHealth){ this.health = this.maxHealth; }
+        if (this.health > this.maxHealth){ this.health = this.maxHealth; }
         if (weapon.name === 'throw insta-bbq'){
             this.number_of_instabbq--;
         }
@@ -121,7 +121,7 @@ Player.prototype.attack = function(){
             this.isNapping = true;
         }
         this.state.playerActionText.text = 'Nessarose ' + weapon.name;
-        this.isCoolingDown = weapon.cooldown;
+        this.data.isCoolingDown = weapon.cooldown;
     }
 };
 var Monster = function(game, x, y, key){
@@ -139,7 +139,7 @@ Monster.prototype.knockback = function(distance){
 Monster.prototype.move = function(){
     //   this.game.physics.arcade.collide(this.monster, this.blockedLayer);
     var fuzz = 20; // we don't need this to be too specific
-    var distance = Math.abs(this.state.player.x - this.x - (this.state.player.width + this.width) / 2 * this.scale.x);
+    var distance = Math.abs(this.state.player.x - this.x);
     if (distance < this.data.range - fuzz){
         this.moveAway();
     }else if(distance > this.data.range + fuzz){
@@ -174,10 +174,13 @@ Monster.prototype.attack = function(){
     if (this.data.isCoolingDown){
         // cooldown should be based on time elapsed, like movement
         this.data.isCoolingDown -= 1;
+        if (!this.data.isCoolingDown){
+            this.state.monsterActionText.text = '';
+        }
         return;
     }
     var fuzz = 20; // we don't need this to be too specific
-    var distance = Math.abs(this.state.player.x - this.x) - (this.width + this.width) / 2;
+    var distance = Math.abs(this.state.player.x - this.x);
     if ((distance + fuzz) > this.data.range && (distance - fuzz) < this.data.range){
         var attack_roll = this.state.rnd.between(0, 99);
         if (attack_roll < this.data.hitson){
@@ -255,9 +258,6 @@ SideScroller.Level.prototype = {
       this.keys.up.action = function(){
           player.look();
       };
-      this.keys.space.action = function(){
-          player.attack();
-      };
   },
   handleKeys: function(){
       var lastKey = this.game.input.keyboard.lastKey;
@@ -273,6 +273,7 @@ SideScroller.Level.prototype = {
     // this.game.physics.arcade.collide(this.player, this.blockedLayer);
     if (this.player.alive){
         this.player.data.velocity.x = 0;
+        this.player.attack();
         this.handleKeys();
         if (!this.monster && this.underTorch()){
             this.addWanderingMonster();

@@ -19,6 +19,51 @@ var Player = function(game, x, y, key){
     this.anchor.setTo(0.5, 1);
     //the camera will follow the player in the world
     this.game.camera.follow(this);
+    // combat settings
+    this.has_broom = false;
+    this.number_of_instabbq = 0;
+    this.weapons = [
+        {
+            name: 'nap',
+            range: 30,
+            damage: 0,
+            cooldown: 300,
+            knockback: 0,
+            selfdamage: -this.maxHealth,
+        },
+        {
+            name: 'punch',
+            range: 60,
+            damage: 3,
+            cooldown: 20,
+            knockback: 20,
+            selfdamage: 0,
+        },
+        {
+            name: 'kick',
+            range: 120,
+            damage: 5,
+            cooldown: 60,
+            knockback: 60,
+            selfdamage: 2,
+        },
+        {
+            name: 'broom',
+            range: 240,
+            damage: 10,
+            cooldown: 30,
+            knockback: 10,
+            selfdamage: 0,
+        },
+        {
+            name: 'throw insta-bbq',
+            range: 600,
+            damage: 150,
+            cooldown: 20,
+            knockback: 120,
+            selfdamage: 0,
+        },
+    ]
 };
 Player.prototype = Object.create(Character.prototype);
 Player.prototype.constructor = Player;
@@ -31,8 +76,54 @@ Player.prototype.look = function(){
 Player.prototype.move = function(){
 };
 Player.prototype.attack = function(){
+    if (!this.state.monster){ return; }
+    if (this.data.isCoolingDown){
+        // cooldown should be based on time elapsed, like movement
+        this.data.isCoolingDown -= 1;
+        if (!this.data.isCoolingDown){
+            this.state.playerActionText.text = '';
+            this.state.isNapping = false;
+        }
+        console.log('uhh, cooling down %s', this.data.isCoolingDown);
+        return;
+    }
+    var monsterToTheLeft = this.state.monster.x < this.x;
+    if (monsterToTheLeft && this.scale.x === -1){
+        // OK we're facing the monster
+    }else if(!monsterToTheLeft && this.scale.x === 1){
+        // OK, we're facing the monster
+    }else{
+        console.log('Nessarose is facing the wrong way!');
+        return;
+    }
+    var distance = Math.abs(this.state.monster.x - this.x);
+    var weapon = null;
+    for (var i = 0; i < this.weapons.length; i++){
+        var w = this.weapons[i];
+        if (w.name === 'nap' && this.state.monster.name !== 'Umber Couch'){ continue; }
+        if (w.name === 'broom' && !this.has_broom){ continue; }
+        if (w.name === 'throw insta-bbq' && !this.number_of_instabbq){ continue; }
+        if (distance < w.range){
+            weapon = w;
+            break;
+        }
+    }
+    if (weapon){
+        this.state.monster.knockback(weapon.knockback);
+        this.state.monster.damage(weapon.damage);
+        this.health -= weapon.selfdamage;
+        // is the following line needed or is it part of framework?
+        if (this.health < this.maxHealth){ this.health = this.maxHealth; }
+        if (weapon.name === 'throw insta-bbq'){
+            this.number_of_instabbq--;
+        }
+        if (weapon.name === 'nap'){
+            this.isNapping = true;
+        }
+        this.state.playerActionText.text = 'Nessarose ' + weapon.name;
+        this.isCoolingDown = weapon.cooldown;
+    }
 };
-
 var Monster = function(game, x, y, key){
     Character.call(this, game, x, y, key);
 };
@@ -41,10 +132,14 @@ Monster.prototype.constructor = Monster;
 Monster.prototype.update = function(){
     Character.prototype.update.call(this);
 };
+Monster.prototype.knockback = function(distance){
+    this.x -= (distance + this.scale.x);
+    // would be nice to effect the speed/momentum too...
+};
 Monster.prototype.move = function(){
     //   this.game.physics.arcade.collide(this.monster, this.blockedLayer);
     var fuzz = 20; // we don't need this to be too specific
-    var distance = Math.abs(this.state.player.x - this.x) - (this.state.player.width + this.width) / 2;
+    var distance = Math.abs(this.state.player.x - this.x - (this.state.player.width + this.width) / 2 * this.scale.x);
     if (distance < this.data.range - fuzz){
         this.moveAway();
     }else if(distance > this.data.range + fuzz){
@@ -56,17 +151,17 @@ Monster.prototype.move = function(){
 Monster.prototype.moveAway = function(){
     var playerToTheLeft = this.state.player.x < this.x;
     if (playerToTheLeft){
-        this.data.velocity.x = this.speed || 350;
+        this.data.velocity.x = this.data.speed;
     }else{
-        this.data.velocity.x = -(this.speed || 350);
+        this.data.velocity.x = -this.data.speed ;
     }
 };
 Monster.prototype.moveCloser = function(){
     var playerToTheLeft = this.state.player.x < this.x;
     if (playerToTheLeft){
-        this.data.velocity.x = -(this.speed || 350);
+        this.data.velocity.x = -this.data.speed;
     }else{
-        this.data.velocity.x = this.speed || 350;
+        this.data.velocity.x = this.data.speed;
     }
 };
 Monster.prototype.attack = function(){
@@ -88,13 +183,17 @@ Monster.prototype.attack = function(){
         if (attack_roll < this.data.hitson){
             this.state.player.damage(this.data.doesDamage);
             this.data.isCoolingDown = this.data.cooldown;
-            this.state.damageText.text = 'The ' + this.name +
+            this.state.monsterActionText.text = 'The ' + this.name +
               ' ' + this.data.attackText + '.';
         }else{
-            this.state.damageText.text = 'The ' + this.name +
+            this.state.monsterActionText.text = 'The ' + this.name +
               ' swung at you, but missed.'
         }
     }
+};
+Monster.prototype.kill = function(){
+    Character.prototype.kill.call(this);
+    this.state.monster = null;
 };
 
 
@@ -156,11 +255,17 @@ SideScroller.Level.prototype = {
       this.keys.up.action = function(){
           player.look();
       };
+      this.keys.space.action = function(){
+          player.attack();
+      };
   },
   handleKeys: function(){
       var lastKey = this.game.input.keyboard.lastKey;
       if (lastKey && lastKey.isDown && lastKey.action){
           lastKey.action();
+      }else{
+          if (this.keys.right.isDown){ this.keys.right.action(); }
+          if (this.keys.left.isDown){ this.keys.left.action(); }
       }
   },
   update: function() {
@@ -263,7 +368,7 @@ SideScroller.Level.prototype = {
         }
     },
 
-    _wanderingMonster: function(sprite_name, name, health, damage, hitson, cooldown, range, attackText){
+    _wanderingMonster: function(sprite_name, name, health, damage, hitson, cooldown, range, attackText, speed){
         var sprite = this.game.add.existing(new Monster(this.game, 0, 350, sprite_name));
         // this.game.physics.arcade.enable(sprite);
         sprite.anchor.setTo(0.5, 1);
@@ -275,7 +380,8 @@ SideScroller.Level.prototype = {
         sprite.data.isCoolingDown = 0;
         sprite.data.range = range;
         sprite.data.attackText = attackText;
-        sprite.data.velocity = {x: -300, y: 0}
+        sprite.data.speed = speed;
+        sprite.data.velocity = {x: -speed, y: 0}
         sprite.kill();
         return sprite;
     },
@@ -291,10 +397,14 @@ SideScroller.Level.prototype = {
         this.monster_name_text = this.game.add.text(this.game.camera.width - 168, 30, '', '20pt Helvetica');
         mhb.fixedToCamera = true;
         this.monster_name_text.fixedToCamera = true;
-        this.damageText = this.game.add.text(0, 0, '', '16pt Helvetica');
-        this.damageText.setTextBounds(173, 90, 400, 30);
-        this.damageText.boundsAlignH = 'center';
-        this.damageText.fixedToCamera = true;
+        this.monsterActionText = this.game.add.text(0, 0, '', '12pt Helvetica');
+        this.monsterActionText.setTextBounds(173, 90, 400, 30);
+        this.monsterActionText.boundsAlignH = 'center';
+        this.monsterActionText.fixedToCamera = true;
+        this.playerActionText = this.game.add.text(0,0, '', '12pt Helvetica');
+        this.playerActionText.setTextBounds(173, 120, 400, 30);
+        this.playerActionText.boundsAlignH = 'center';
+        this.playerActionText.fixedToCamera = true;
     },
 
     initWanderingMonsters: function(){
@@ -309,27 +419,27 @@ SideScroller.Level.prototype = {
     },
 
     wanderingUmberCouch: function(){
-        return this._wanderingMonster('umber_couch', 'Umber Couch', 200, 4, 60, 30, 105, "butts its upholstery against you");
+        return this._wanderingMonster('umber_couch', 'Umber Couch', 200, 4, 60, 30, 105, "butts its upholstery against you", 50);
     },
 
     wanderingHandFlayer: function(){
-        return this._wanderingMonster('hand_flayer', 'Hand Flayer', 25, 6, 80, 60, 70, 'slaps you with its slimy hand-tentacles');
+        return this._wanderingMonster('hand_flayer', 'Hand Flayer', 25, 6, 80, 60, 70, 'slaps you with its slimy hand-tentacles', 100);
     },
 
     wanderingBearicorn: function(){
-        return this._wanderingMonster('bearicorn', 'Bearicorn', 150, 8, 65, 60, 70, 'gores you with its sparkly horn');
+        return this._wanderingMonster('bearicorn', 'Bearicorn', 150, 8, 65, 60, 70, 'gores you with its sparkly horn', 95);
     },
 
     wanderingOchreCube: function(){
-        return this._wanderingMonster('ochre_cube', 'Ochre Cube', 50, 1, 90, 0, -35, 'leaves permanent turmeric stains on your clothing');
+        return this._wanderingMonster('ochre_cube', 'Ochre Cube', 50, 1, 90, 0, -35, 'leaves permanent turmeric stains on your clothing', 25);
     },
 
     wanderingOwlpig: function(){
-        return this._wanderingMonster('owlpig', 'Owlpig', 100, 6, 50, 60, 70, 'pecks visciously at you with its snout');
+        return this._wanderingMonster('owlpig', 'Owlpig', 100, 6, 50, 60, 70, 'pecks visciously at you with its snout', 110);
     },
 
     wanderingGloblin: function(){
-        return this._wanderingMonster('globlin', 'Globlin', 10, 2, 80, 120, 250, 'throws a globule of itself at you');
+        return this._wanderingMonster('globlin', 'Globlin', 10, 2, 80, 120, 250, 'throws a globule of itself at you', 125);
     },
 
     addWanderingMonster: function(){

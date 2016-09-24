@@ -1,23 +1,23 @@
-var Character = function(game, x, y, key){
-    Phaser.Sprite.call(this, game, x, y, key);
-    this.state = this.game.state.states.Level;
+var Character = function(x, y, name){
+    Phaser.Sprite.call(this, game, x, y, name);
+    this.state = game.state.states.Level;
 };
 Character.prototype = Object.create(Phaser.Sprite.prototype);
 Character.prototype.constructor = Character;
 Character.prototype.update = function(){
     // automatically called by World.update
-    this.x += this.velocity.x * this.game.time.physicsElapsed;
+    this.x += this.velocity.x * game.time.physicsElapsed;
 };
 
-var Player = function(game, x, y, key){
-    Character.call(this, game, x, y, key);
+var Player = function(x, y, name){
+    Character.call(this, x, y, name);
     this.health = this.maxHealth;
     this.velocity = {x: 300, y: 0};
     this._anim = this.animations.add('walk');
     this._anim.play(10, true);
     this.anchor.setTo(0.5, 1);
     //the camera will follow the player in the world
-    this.game.camera.follow(this);
+    game.camera.follow(this);
     // combat settings
     this.has_broom = false;
     this.number_of_instabbq = 0;
@@ -123,8 +123,9 @@ Player.prototype.attack = function(){
         this.isCoolingDown = weapon.cooldown;
     }
 };
-var Monster = function(game, x, y, name, info){
-    Character.call(this, game, x, y, name);
+
+var Monster = function(x, y, name, info){
+    Character.call(this, x, y, name);
     this.anchor.setTo(0.5, 1);
     Phaser.Utils.extend(this, info);
     this.maxHealth = info.health;
@@ -142,7 +143,7 @@ Monster.prototype.knockback = function(distance){
     // would be nice to effect the speed/momentum too...
 };
 Monster.prototype.move = function(){
-    //   this.game.physics.arcade.collide(this.monster, this.blockedLayer);
+    //   game.physics.arcade.collide(this.monster, this.blockedLayer);
     var fuzz = 20; // we don't need this to be too specific
     var distance = Math.abs(this.state.player.x - this.x);
     if (distance < this.range - fuzz){

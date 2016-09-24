@@ -4,10 +4,10 @@ var SideScroller = SideScroller || {};
 SideScroller.Level = function(){};
 SideScroller.Level.prototype = {
   preload: function() {
-      this.game.time.advancedTiming = true;
+      game.time.advancedTiming = true;
     },
   create: function() {
-    this.map = this.game.add.tilemap('level1');
+    this.map = game.add.tilemap('level1');
     //the first parameter is the tileset name as specified in Tiled, the second is the key to the asset
     this.map.addTilesetImage('dungeon', 'gameTiles');
     //create layers
@@ -19,7 +19,8 @@ SideScroller.Level.prototype = {
     //resizes the game world to match the layer dimensions
     this.backgroundLayer1.resizeWorld();
     //create player
-    this.player = this.game.add.existing(new Player(this.game, 35, 350, 'player'));
+    this.player = game.add.existing(new Player(35, 350, 'player'));
+    console.log(this.player);
     //move player with cursor keys
     this.setupKeys();
     // set up torch sprite and animation
@@ -32,8 +33,8 @@ SideScroller.Level.prototype = {
   },
   setupKeys: function(){
       var player = this.player;
-      this.game.input.keyboard.enabled = true;
-      this.keys = this.game.input.keyboard.addKeys({
+      game.input.keyboard.enabled = true;
+      this.keys = game.input.keyboard.addKeys({
           a: Phaser.KeyCode.A,
           b: Phaser.KeyCode.B, // insta-bbq
           c: Phaser.KeyCode.C, // curse
@@ -60,7 +61,7 @@ SideScroller.Level.prototype = {
       };
   },
   handleKeys: function(){
-      var lastKey = this.game.input.keyboard.lastKey;
+      var lastKey = game.input.keyboard.lastKey;
       if (lastKey && lastKey.isDown && lastKey.action){
           lastKey.action();
       }else{
@@ -70,7 +71,7 @@ SideScroller.Level.prototype = {
   },
   update: function() {
     // collision
-    // this.game.physics.arcade.collide(this.player, this.blockedLayer);
+    // game.physics.arcade.collide(this.player, this.blockedLayer);
     if (this.player.alive){
         this.player.velocity.x = 0;
         this.player.attack();
@@ -84,21 +85,21 @@ SideScroller.Level.prototype = {
         }
     }
     //restart the game if reaching the edge
-    if(this.player.x >= this.game.world.width || this.player.x < 0) {
-        this.game.state.start('Level');
+    if(this.player.x >= game.world.width || this.player.x < 0) {
+        game.state.start('Level');
     }
     // show health bars
     this.showHealth();
   },
   render: function(){
-        this.game.debug.text(this.game.time.fps || '--', 10, 20, "#00ff00", "14px Courier");
+        game.debug.text(game.time.fps || '--', 10, 20, "#00ff00", "14px Courier");
     },
   playerHit: function(player, blockedLayer) {
 
   },
   playerSweepBounds: function(){
       var b = this.player.getBounds();
-      return new Phaser.Rectangle(b.x, 0, b.width, this.game.world.height);
+      return new Phaser.Rectangle(b.x, 0, b.width, game.world.height);
   },
   underTorch: function(){
       var bounds = this.playerSweepBounds();
@@ -111,7 +112,7 @@ SideScroller.Level.prototype = {
   },
   //find objects in a Tiled layer that containt a property called "type" equal to a certain value
   findObjectsByType: function(type, map, layerName) {
-      var result = new Array();
+      var result = [];
       map.objects[layerName].forEach(function(element){
         if(element.type === type) {
           //Phaser uses top left, Tiled bottom left so we have to adjust
@@ -133,7 +134,7 @@ SideScroller.Level.prototype = {
 
     //create torches
     createTorches: function() {
-        this.torches = this.game.add.group();
+        this.torches = game.add.group();
         this.torches.enableBody = true;
         var result = this.findObjectsByType('torch', this.map, 'Objects');
         result.forEach(function(element){
@@ -149,7 +150,7 @@ SideScroller.Level.prototype = {
         if (relativeHealth < .25){
             health_colour = '#ff0000';
         }else if (relativeHealth < .5){
-            health_color = '#ffff00';
+            health_colour = '#ffff00';
         }
         bar.context.fillStyle = health_colour;
         bar.context.fillRect(0,0, 128 * relativeHealth, 8);
@@ -171,49 +172,34 @@ SideScroller.Level.prototype = {
 
     initText: function(){
         this.player_health_bar = this.add.bitmapData(128, 8);
-        var phb = this.game.add.sprite(40, 60, this.player_health_bar);
-        var pht = this.game.add.text(40, 30, 'Nessarose', '20pt Helvetica');
+        var phb = game.add.sprite(40, 60, this.player_health_bar);
+        var pht = game.add.text(40, 30, 'Nessarose', '20pt Helvetica');
         phb.fixedToCamera = true;
         pht.fixedToCamera = true;
         this.monster_health_bar = this.add.bitmapData(128, 8);
-        var mhb = this.game.add.sprite(this.game.camera.width - 168, 60, this.monster_health_bar);
-        this.monster_name_text = this.game.add.text(this.game.camera.width - 168, 30, '', '20pt Helvetica');
+        var mhb = game.add.sprite(game.camera.width - 168, 60, this.monster_health_bar);
+        this.monster_name_text = game.add.text(game.camera.width - 168, 30, '', '20pt Helvetica');
         mhb.fixedToCamera = true;
         this.monster_name_text.fixedToCamera = true;
-        this.monsterActionText = this.game.add.text(0, 0, '', '12pt Helvetica');
+        this.monsterActionText = game.add.text(0, 0, '', '12pt Helvetica');
         this.monsterActionText.setTextBounds(173, 90, 400, 30);
         this.monsterActionText.boundsAlignH = 'center';
         this.monsterActionText.fixedToCamera = true;
-        this.playerActionText = this.game.add.text(0,0, '', '12pt Helvetica');
+        this.playerActionText = game.add.text(0,0, '', '12pt Helvetica');
         this.playerActionText.setTextBounds(173, 120, 400, 30);
         this.playerActionText.boundsAlignH = 'center';
         this.playerActionText.fixedToCamera = true;
     },
 
     initWanderingMonsters: function(){
-        var monsters = this.monsters = {};
-        var game = this.game
+        var monsters = this.monsters = [];
         Object.keys(creatures).forEach(function(name){
-            monsters[name] = game.add.existing(new Monster(game, 0, 350, name, creatures[name]));
+            monsters.push(game.add.existing(new Monster(0, 350, name, creatures[name])));
         });
     },
 
     addWanderingMonster: function(){
-        var choice = this.game.rnd.between(0, 62);
-        var monster = null;
-        if (choice < 1){
-            monster = this.monsters.umber_couch;
-        }else if (choice < 3){
-            monster = this.monsters.hand_flayer;
-        }else if (choice < 7){
-            monster = this.monsters.bearicorn;
-        }else if (choice < 15){
-            monster = this.monsters.ochre_cube;
-        }else if (choice < 31){
-            monster = this.monsters.owlpig;
-        }else{
-            monster = this.monsters.globlin;
-        }
+        var monster = getWeightedItem(this.monsters);
         monster.revive();
         monster.health = monster.maxHealth;
         monster.x = this.player.x + 200;

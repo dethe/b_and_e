@@ -5,7 +5,7 @@ function getWeightedItem(list){
     for (var i = 0; i< list.length; i++){
         totalWeight += list[i].weight;
     }
-    var choice = this.game.rnd.integerInRange(1, totalWeight);
+    var choice = game.rnd.integerInRange(1, totalWeight);
     for (var i = 0; i < list.length; i++){
         choice -= list[i].weight;
         if (choice < 1){

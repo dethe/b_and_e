@@ -4,9 +4,9 @@ SideScroller.Preload = function(){};
 SideScroller.Preload.prototype = {
   preload: function() {
     //show loading screen
-    this.preloadBar = this.add.sprite(this.game.world.centerX, this.game.world.centerY, 'preloadbar');
+    this.preloadBar = this.add.sprite(game.world.centerX, game.world.centerY, 'preloadbar');
     this.preloadBar.anchor.setTo(0.5);
-    this.preloadBar.scale.setTo(3);
+    this.preloadBar.scale.setTo(0.5);
     this.load.setPreloadSprite(this.preloadBar);
     //load game assets
     this.load.tilemap('level1', 'assets/tilemaps/dungeon_tileset.json', null, Phaser.Tilemap.TILED_JSON);

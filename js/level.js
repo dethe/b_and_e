@@ -7,13 +7,13 @@ Character.prototype = Object.create(Phaser.Sprite.prototype);
 Character.prototype.constructor = Character;
 Character.prototype.update = function(){
     // automatically called by World.update
-    this.x += this.data.velocity.x * this.game.time.physicsElapsed;
+    this.x += this.velocity.x * this.game.time.physicsElapsed;
 };
 
 var Player = function(game, x, y, key){
     Character.call(this, game, x, y, key);
     this.health = this.maxHealth;
-    this.data.velocity = {x: 300, y: 0};
+    this.velocity = {x: 300, y: 0};
     this._anim = this.animations.add('walk');
     this._anim.play(10, true);
     this.anchor.setTo(0.5, 1);
@@ -76,10 +76,10 @@ Player.prototype.look = function(){
 Player.prototype.move = function(){
 };
 Player.prototype.attack = function(){
-    if (this.data.isCoolingDown){
+    if (this.isCoolingDown){
         // cooldown should be based on time elapsed, like movement
-        this.data.isCoolingDown -= 1;
-        if (!this.data.isCoolingDown){
+        this.isCoolingDown -= 1;
+        if (!this.isCoolingDown){
             this.state.playerActionText.text = '';
             this.state.isNapping = false;
         }
@@ -121,11 +121,23 @@ Player.prototype.attack = function(){
             this.isNapping = true;
         }
         this.state.playerActionText.text = 'Nessarose ' + weapon.name;
-        this.data.isCoolingDown = weapon.cooldown;
+        this.isCoolingDown = weapon.cooldown;
     }
 };
-var Monster = function(game, x, y, key){
-    Character.call(this, game, x, y, key);
+var Monster = function(game, x, y, name, info){
+    Character.call(this, game, x, y, name);
+    this.anchor.setTo(0.5, 1);
+    this.name = name;
+    this.health = this.maxHealth = info.health;
+    this.doesDamage = info.damage;
+    this.hitson = info.hitson; // percent
+    this.cooldown = info.cooldown;
+    this.isCoolingDown = 0;
+    this.range = info.range;
+    this.attackText = info.attackText;
+    this.speed = info.speed;
+    this.velocity = {x: -info.speed, y: 0}
+    this.kill(true);
 };
 Monster.prototype = Object.create(Character.prototype);
 Monster.prototype.constructor = Monster;
@@ -140,28 +152,28 @@ Monster.prototype.move = function(){
     //   this.game.physics.arcade.collide(this.monster, this.blockedLayer);
     var fuzz = 20; // we don't need this to be too specific
     var distance = Math.abs(this.state.player.x - this.x);
-    if (distance < this.data.range - fuzz){
+    if (distance < this.range - fuzz){
         this.moveAway();
-    }else if(distance > this.data.range + fuzz){
+    }else if(distance > this.range + fuzz){
         this.moveCloser();
     }else{
-        this.data.velocity.x = 0;
+        this.velocity.x = 0;
     }
 };
 Monster.prototype.moveAway = function(){
     var playerToTheLeft = this.state.player.x < this.x;
     if (playerToTheLeft){
-        this.data.velocity.x = this.data.speed;
+        this.velocity.x = this.speed;
     }else{
-        this.data.velocity.x = -this.data.speed ;
+        this.velocity.x = -this.speed ;
     }
 };
 Monster.prototype.moveCloser = function(){
     var playerToTheLeft = this.state.player.x < this.x;
     if (playerToTheLeft){
-        this.data.velocity.x = -this.data.speed;
+        this.velocity.x = -this.speed;
     }else{
-        this.data.velocity.x = this.data.speed;
+        this.velocity.x = this.speed;
     }
 };
 Monster.prototype.attack = function(){
@@ -171,31 +183,34 @@ Monster.prototype.attack = function(){
     }else{
         this.scale.x = -1;
     }
-    if (this.data.isCoolingDown){
+    if (this.isCoolingDown){
         // cooldown should be based on time elapsed, like movement
-        this.data.isCoolingDown -= 1;
-        if (!this.data.isCoolingDown){
+        this.isCoolingDown -= 1;
+        if (!this.isCoolingDown){
             this.state.monsterActionText.text = '';
         }
         return;
     }
     var fuzz = 20; // we don't need this to be too specific
     var distance = Math.abs(this.state.player.x - this.x);
-    if ((distance + fuzz) > this.data.range && (distance - fuzz) < this.data.range){
+    if ((distance + fuzz) > this.range && (distance - fuzz) < this.range){
         var attack_roll = this.state.rnd.between(0, 99);
-        if (attack_roll < this.data.hitson){
-            this.state.player.damage(this.data.doesDamage);
-            this.data.isCoolingDown = this.data.cooldown;
+        if (attack_roll < this.hitson){
+            this.state.player.damage(this.doesDamage);
+            this.isCoolingDown = this.cooldown;
             this.state.monsterActionText.text = 'The ' + this.name +
-              ' ' + this.data.attackText + '.';
+              ' ' + this.attackText + '.';
         }else{
             this.state.monsterActionText.text = 'The ' + this.name +
               ' swung at you, but missed.'
         }
     }
 };
-Monster.prototype.kill = function(){
+Monster.prototype.kill = function(firstTime){
     Character.prototype.kill.call(this);
+    if (!firstTime){
+        // add loot
+    }
     this.state.monster = null;
 };
 
@@ -249,11 +264,11 @@ SideScroller.Level.prototype = {
       });
       this.keys.right.action = function(){
           player.scale.x = 1;
-          player.data.velocity.x = 300;
+          player.velocity.x = 300;
       };
       this.keys.left.action = function(){
           player.scale.x = -1;
-          player.data.velocity.x = -300;
+          player.velocity.x = -300;
       };
       this.keys.up.action = function(){
           player.look();
@@ -272,7 +287,7 @@ SideScroller.Level.prototype = {
     // collision
     // this.game.physics.arcade.collide(this.player, this.blockedLayer);
     if (this.player.alive){
-        this.player.data.velocity.x = 0;
+        this.player.velocity.x = 0;
         this.player.attack();
         this.handleKeys();
         if (!this.monster && this.underTorch()){
@@ -369,24 +384,6 @@ SideScroller.Level.prototype = {
         }
     },
 
-    _wanderingMonster: function(sprite_name, name, health, damage, hitson, cooldown, range, attackText, speed){
-        var sprite = this.game.add.existing(new Monster(this.game, 0, 350, sprite_name));
-        // this.game.physics.arcade.enable(sprite);
-        sprite.anchor.setTo(0.5, 1);
-        sprite.name = name;
-        sprite.health = sprite.maxHealth = health;
-        sprite.data.doesDamage = damage;
-        sprite.data.hitson = hitson; // percent
-        sprite.data.cooldown = cooldown;
-        sprite.data.isCoolingDown = 0;
-        sprite.data.range = range;
-        sprite.data.attackText = attackText;
-        sprite.data.speed = speed;
-        sprite.data.velocity = {x: -speed, y: 0}
-        sprite.kill();
-        return sprite;
-    },
-
     initText: function(){
         this.player_health_bar = this.add.bitmapData(128, 8);
         var phb = this.game.add.sprite(40, 60, this.player_health_bar);
@@ -409,38 +406,11 @@ SideScroller.Level.prototype = {
     },
 
     initWanderingMonsters: function(){
-        this.monsters = {
-            umber_couch: this.wanderingUmberCouch(),
-            hand_flayer: this.wanderingHandFlayer(),
-            bearicorn: this.wanderingBearicorn(),
-            ochre_cube: this.wanderingOchreCube(),
-            owlpig: this.wanderingOwlpig(),
-            globlin: this.wanderingGloblin(),
-        };
-    },
-
-    wanderingUmberCouch: function(){
-        return this._wanderingMonster('umber_couch', 'Umber Couch', 200, 4, 60, 30, 105, "butts its upholstery against you", 50);
-    },
-
-    wanderingHandFlayer: function(){
-        return this._wanderingMonster('hand_flayer', 'Hand Flayer', 25, 6, 80, 60, 70, 'slaps you with its slimy hand-tentacles', 100);
-    },
-
-    wanderingBearicorn: function(){
-        return this._wanderingMonster('bearicorn', 'Bearicorn', 150, 8, 65, 60, 70, 'gores you with its sparkly horn', 95);
-    },
-
-    wanderingOchreCube: function(){
-        return this._wanderingMonster('ochre_cube', 'Ochre Cube', 50, 1, 90, 0, -35, 'leaves permanent turmeric stains on your clothing', 25);
-    },
-
-    wanderingOwlpig: function(){
-        return this._wanderingMonster('owlpig', 'Owlpig', 100, 6, 50, 60, 70, 'pecks visciously at you with its snout', 110);
-    },
-
-    wanderingGloblin: function(){
-        return this._wanderingMonster('globlin', 'Globlin', 10, 2, 80, 120, 250, 'throws a globule of itself at you', 125);
+        var monsters = this.monsters = {};
+        var game = this.game
+        Object.keys(creatures).forEach(function(name){
+            monsters[name] = game.add.existing(new Monster(game, 0, 350, name, creatures[name]));
+        });
     },
 
     addWanderingMonster: function(){

@@ -181,5 +181,22 @@ var creatures = {
         range: 250,
         attackText: 'throws a globule of itself at you',
         speed: 125,
+        loot: [
+            {
+                name: 'coin',
+                upTo: 4,
+                chance: 60,
+            },
+            {
+                name: 'insta-bbq',
+                upTo: 1,
+                chance: 5,
+            },
+            {
+                name: 'broom',
+                upTo: 1,
+                chance: 10
+            },
+        ]
     }
 }

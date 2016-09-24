@@ -89,7 +89,8 @@ SideScroller.Level.prototype = {
         game.state.start('Level');
     }
     // show health bars
-    this.showHealth();
+    this.player_health_bar.update();
+    this.monster_health_bar.update();
   },
   render: function(){
         game.debug.text(game.time.fps || '--', 10, 20, "#00ff00", "14px Courier");
@@ -142,45 +143,54 @@ SideScroller.Level.prototype = {
         }, this);
     },
 
-    showCharHealth: function(sprite, bar){
-        var relativeHealth = sprite.health / sprite.maxHealth;
-        bar.context.fillStyle = '#000';
-        bar.context.fillRect(0,0, 128, 8);
-        var health_colour = '#00ff00';
-        if (relativeHealth < .25){
-            health_colour = '#ff0000';
-        }else if (relativeHealth < .5){
-            health_colour = '#ffff00';
+    addHealthBar: function(x,y,w,h,sprite){
+        var bar = this.add.bitmapData(w,h);
+        var hb = game.add.sprite(x, y, bar);
+        hb.fixedToCamera = true;
+        var text = game.add.text(x, y-30, '', '20pt Helvetica');
+        text.fixedToCamera = true;
+        if (sprite){
+            text.setText(sprite.name);
         }
-        bar.context.fillStyle = health_colour;
-        bar.context.fillRect(0,0, 128 * relativeHealth, 8);
-        bar.dirty = true;
-
-    },
-
-    showHealth: function(){
-        this.showCharHealth(this.player, this.player_health_bar);
-        if (this.monster){
-            this.monster_name_text.setText(this.monster.name);
-            this.showCharHealth(this.monster, this.monster_health_bar);
-        }else{
-            this.monster_health_bar.context.clearRect(0,0,128,8);
-            this.monster_health_bar.dirty = true;
-            this.monster_name_text.setText('');
+        function update(){
+            if (this.sprite){
+                var relativeHealth = this.sprite.health / this.sprite.maxHealth;
+                bar.context.fillStyle = '#000';
+                bar.context.fillRect(0,0, 128, 8);
+                var health_colour = '#00ff00';
+                if (relativeHealth < .25){
+                    health_colour = '#ff0000';
+                }else if (relativeHealth < .5){
+                    health_colour = '#ffff00';
+                }
+                bar.context.fillStyle = health_colour;
+                bar.context.fillRect(0,0, 128 * relativeHealth, 8);
+                bar.dirty = true;
+            }
+        }
+        function clearSprite(){
+            text.setText('');
+            this.sprite = null;
+            bar.context.clearRect(0,0,128,8);
+            bar.dirty = true;
+            text.setText('');
+        }
+        function setSprite(sprite){
+            text.setText(sprite.name);
+            this.sprite = sprite;
+            this.update();
+        }
+        return {
+            update: update,
+            clearSprite: clearSprite,
+            setSprite: setSprite,
+            sprite: sprite,
         }
     },
 
     initText: function(){
-        this.player_health_bar = this.add.bitmapData(128, 8);
-        var phb = game.add.sprite(40, 60, this.player_health_bar);
-        var pht = game.add.text(40, 30, 'Nessarose', '20pt Helvetica');
-        phb.fixedToCamera = true;
-        pht.fixedToCamera = true;
-        this.monster_health_bar = this.add.bitmapData(128, 8);
-        var mhb = game.add.sprite(game.camera.width - 168, 60, this.monster_health_bar);
-        this.monster_name_text = game.add.text(game.camera.width - 168, 30, '', '20pt Helvetica');
-        mhb.fixedToCamera = true;
-        this.monster_name_text.fixedToCamera = true;
+        this.player_health_bar = this.addHealthBar(40, 60, 128, 8, this.player);
+        this.monster_health_bar = this.addHealthBar(game.camera.width - 168, 60, 128, 8);
         this.monsterActionText = game.add.text(0, 0, '', '12pt Helvetica');
         this.monsterActionText.setTextBounds(173, 90, 400, 30);
         this.monsterActionText.boundsAlignH = 'center';
@@ -204,6 +214,7 @@ SideScroller.Level.prototype = {
         monster.health = monster.maxHealth;
         monster.x = this.player.x + 200;
         this.monster = monster;
+        this.monster_health_bar.setSprite(monster);
         return monster;
     },
   };

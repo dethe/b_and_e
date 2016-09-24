@@ -1,3 +1,46 @@
+var brooms = {
+    broomList: [
+        {
+            name: 'dusty broom',
+            doesDamage: 8
+        },
+        {
+            name: 'cobweb broom',
+            doesDamage: 12
+        },
+        {
+            name: 'hearth broom',
+            doesDamage: 16
+        },
+        {
+            name: 'kitchen broom',
+            doesDamage: 20
+        },
+        {
+            name: 'mountain broom',
+            doesDamage: 24
+        },
+        {
+            name: 'wicked broom',
+            doesDamage: 28
+        },
+        {
+            name: 'dragon broom',
+            doesDamage: 32
+        },
+    ],
+    nextBroom: function(broom){
+        if (!broom){
+            return this.broomList[0];
+        }
+        var idx = this.broomList.indexOf(broom) + 1;
+        if (idx < this.broomList.length){
+            broom = this.broomList[idx];
+        }
+        return broom;
+    }
+};
+
 var Character = function(x, y, name){
     Phaser.Sprite.call(this, game, x, y, name);
     this.state = game.state.states.Level;
@@ -11,6 +54,7 @@ Character.prototype.update = function(){
 
 var Player = function(x, y, name){
     Character.call(this, x, y, name);
+    this.name = 'Nessarose';
     this.health = this.maxHealth;
     this.velocity = {x: 300, y: 0};
     this._anim = this.animations.add('walk');
@@ -19,8 +63,10 @@ var Player = function(x, y, name){
     //the camera will follow the player in the world
     game.camera.follow(this);
     // combat settings
-    this.has_broom = false;
-    this.number_of_instabbq = 0;
+    this.broom = null;
+    this.coins = 0;
+    this.instaBBQs = 0;
+    this.busTickets = 0;
     this.weapons = [
         {
             name: 'nap',
@@ -100,8 +146,8 @@ Player.prototype.attack = function(){
     for (var i = 0; i < this.weapons.length; i++){
         var w = this.weapons[i];
         if (w.name === 'nap' && this.state.monster.name !== 'Umber Couch'){ continue; }
-        if (w.name === 'broom' && !this.has_broom){ continue; }
-        if (w.name === 'throw insta-bbq' && !this.number_of_instabbq){ continue; }
+        if (w.name === 'broom' && !this.broom){ continue; }
+        if (w.name === 'throw insta-bbq' && !this.instaBBQs){ continue; }
         if (distance < w.range){
             weapon = w;
             break;
@@ -114,13 +160,46 @@ Player.prototype.attack = function(){
         // is the following line needed or is it part of framework?
         if (this.health > this.maxHealth){ this.health = this.maxHealth; }
         if (weapon.name === 'throw insta-bbq'){
-            this.number_of_instabbq--;
+            this.instaBBQs--;
         }
         if (weapon.name === 'nap'){
             this.isNapping = true;
         }
         this.state.playerActionText.text = 'Nessarose ' + weapon.name;
         this.isCoolingDown = weapon.cooldown;
+    }
+};
+Player.prototype.loot = function(item, number){
+    switch(item){
+        case 'coin':
+            this.coins += number;
+            break;
+        case 'lost thing':
+            // get a random one of remaining lost things
+            // maybe win game?
+            break;
+        case 'bunion ointment':
+            // kick gets stronger
+            // kick self-damage gets less
+            break;
+        case 'insta-bbq':
+            self.instaBBQs += number;
+            break;
+        case 'broom':
+            self.broom = brooms.nextBroom(self.broom);
+            // upgrade our broom
+            for (var i = 0; i < self.weapons.length; i++){
+                if (self.weapons[i].name === 'broom'){
+                    self.weapons[i].damage = self.broom.damage;
+                }
+            }
+            break;
+        case 'bus ticket':
+            self.busTickets += 1;
+            break;
+        default:
+            console.error('we should not get here');
+            break;
     }
 };
 
@@ -203,7 +282,13 @@ Monster.prototype.attack = function(){
 Monster.prototype.kill = function(firstTime){
     Character.prototype.kill.call(this);
     if (!firstTime){
-        // add loot
+        for (var i=0; i < this.loot.length; i++){
+            var item = this.loot[i];
+            if (game.rnd.integerInRange(0, 99) < item.chance){
+                this.state.player.loot(item.name, game.rnd.integerInRange(1, item.upTo));
+            }
+        }
+        this.state.monster_health_bar.clearSprite();
     }
     this.state.monster = null;
 };

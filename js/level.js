@@ -1,4 +1,5 @@
 
+
 var Character = function(game, x, y, key){
     Phaser.Sprite.call(this, game, x, y, key);
     this.state = this.game.state.states.Level;
@@ -93,7 +94,7 @@ Player.prototype.attack = function(){
     }else if(!monsterToTheLeft && this.scale.x === 1){
         // OK, we're facing the monster
     }else{
-        console.log('Nessarose is facing the wrong way!');
+        // console.log('Nessarose is facing the wrong way!');
         return;
     }
     var distance = Math.abs(this.state.monster.x - this.x);
@@ -127,15 +128,9 @@ Player.prototype.attack = function(){
 var Monster = function(game, x, y, name, info){
     Character.call(this, game, x, y, name);
     this.anchor.setTo(0.5, 1);
-    this.name = name;
-    this.health = this.maxHealth = info.health;
-    this.doesDamage = info.damage;
-    this.hitson = info.hitson; // percent
-    this.cooldown = info.cooldown;
+    Phaser.Utils.extend(this, info);
+    this.maxHealth = info.health;
     this.isCoolingDown = 0;
-    this.range = info.range;
-    this.attackText = info.attackText;
-    this.speed = info.speed;
     this.velocity = {x: -info.speed, y: 0}
     this.kill(true);
 };

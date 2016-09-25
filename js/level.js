@@ -89,8 +89,8 @@ SideScroller.Level.prototype = {
         game.state.start('Level');
     }
     // show health bars
-    this.player_health_bar.update();
-    this.monster_health_bar.update();
+    this.playerHealthBar.update();
+    this.monsterHealthBar.update();
   },
   render: function(){
         game.debug.text(game.time.fps || '--', 10, 20, "#00ff00", "14px Courier");
@@ -129,8 +129,8 @@ SideScroller.Level.prototype = {
     createFromTiledObject: function(element, group) {
         var torch = group.create(element.x, element.y, 'torch_sheet');
         // add animation to torch
-        var torch_anim = torch.animations.add('flicker');
-        torch_anim.play(10, true);
+        var torchAnim = torch.animations.add('flicker');
+        torchAnim.play(10, true);
     },
 
     //create torches
@@ -188,17 +188,19 @@ SideScroller.Level.prototype = {
         }
     },
 
+    addText: function(x, y, w, h, align, text){
+        var text = game.add.text(0, 0, text, '12pt Helvetica');
+        text.setTextBounds(x, y, w, h);
+        text.boundsAlignH = align;
+        text.fixedToCamera = true;
+        return text;
+    },
+
     initText: function(){
-        this.player_health_bar = this.addHealthBar(40, 60, 128, 8, this.player);
-        this.monster_health_bar = this.addHealthBar(game.camera.width - 168, 60, 128, 8);
-        this.monsterActionText = game.add.text(0, 0, '', '12pt Helvetica');
-        this.monsterActionText.setTextBounds(173, 90, 400, 30);
-        this.monsterActionText.boundsAlignH = 'center';
-        this.monsterActionText.fixedToCamera = true;
-        this.playerActionText = game.add.text(0,0, '', '12pt Helvetica');
-        this.playerActionText.setTextBounds(173, 120, 400, 30);
-        this.playerActionText.boundsAlignH = 'center';
-        this.playerActionText.fixedToCamera = true;
+        this.playerHealthBar = this.addHealthBar(40, 60, 128, 8, this.player);
+        this.monsterHealthBar = this.addHealthBar(game.camera.width - 168, 60, 128, 8);
+        this.monsterActionText = this.addText(173, 90, 400, 30, 'right', '');
+        this.playerActionText = this.addText(173, 120, 400, 30, 'left', '');
     },
 
     initWanderingMonsters: function(){
@@ -209,12 +211,6 @@ SideScroller.Level.prototype = {
     },
 
     addWanderingMonster: function(){
-        var monster = getWeightedItem(this.monsters);
-        monster.revive();
-        monster.health = monster.maxHealth;
-        monster.x = this.player.x + 200;
-        this.monster = monster;
-        this.monster_health_bar.setSprite(monster);
-        return monster;
+        return getWeightedItem(this.monsters).restore()
     },
   };

@@ -41,6 +41,8 @@ var brooms = {
     }
 };
 
+var bbqSymbol = '🌶';
+
 var Character = function(x, y, name){
     Phaser.Sprite.call(this, game, x, y, name);
     this.state = game.state.states.Level;
@@ -267,8 +269,8 @@ Monster.prototype.attack = function(){
     var fuzz = 20; // we don't need this to be too specific
     var distance = Math.abs(this.state.player.x - this.x);
     if ((distance + fuzz) > this.range && (distance - fuzz) < this.range){
-        var attack_roll = this.state.rnd.between(0, 99);
-        if (attack_roll < this.hitson){
+        var attackRoll = this.state.rnd.between(0, 99);
+        if (attackRoll < this.hitson){
             this.state.player.damage(this.doesDamage);
             this.isCoolingDown = this.cooldown;
             this.state.monsterActionText.text = 'The ' + this.name +
@@ -288,7 +290,15 @@ Monster.prototype.kill = function(firstTime){
                 this.state.player.loot(item.name, game.rnd.integerInRange(1, item.upTo));
             }
         }
-        this.state.monster_health_bar.clearSprite();
+        this.state.monsterHealthBar.clearSprite();
     }
     this.state.monster = null;
+};
+Monster.prototype.restore = function(){
+    this.revive();
+    this.health = this.maxHealth;
+    this.x = this.state.player.x + 200;
+    this.state.monster = this;
+    this.state.monsterHealthBar.setSprite(this);
+    return this;
 };

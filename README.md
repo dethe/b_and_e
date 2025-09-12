@@ -1,2 +1,3 @@
-# b_and_e
-Classic Bunions and Entrees: The Dungeon of Lost Things (for Ludum Dare 36)
+Moved project to Codeberg: https://codeberg.org/dethe/b_and_e/ for all the reasons given by the [Give Up Github](https://sfconservancy.org/GiveUpGitHub/) campaign.
+
+Visible on my site: https://livingcode.org/projects/b_and_e/
